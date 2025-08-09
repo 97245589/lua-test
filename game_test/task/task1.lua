@@ -28,7 +28,6 @@ local create_task_mgrs = function(handle)
         return table.concat(event_arr, "|", 1, #event_arr - 1)
     end
 
-    local event_mark, event
     local task_mgrs = {}
     local M = {}
 
@@ -87,7 +86,8 @@ local create_task_mgrs = function(handle)
         end
     end
 
-    M.count_task = function(obj, task_obj, task_cfg)
+    M.count_task = function(obj, task_obj, task_cfg, event)
+        local event_mark = gen_event_mark(event)
         local taskids = task_obj.marks[event_mark]
         if not taskids then
             print("no taskids ---", event_mark, dump(event))
@@ -112,10 +112,8 @@ local create_task_mgrs = function(handle)
         task_mgrs[name] = mgr
     end
     M.trigger_event = function(obj, pevent)
-        event = pevent
-        event_mark = gen_event_mark(pevent)
         for name, mgr in pairs(task_mgrs) do
-            mgr.trigger_event(obj)
+            mgr.trigger_event(obj, pevent)
         end
     end
     return M
@@ -128,13 +126,13 @@ local mgrs = create_task_mgrs({
 })
 
 local player = {
-    level = 4,
+    level = 1,
     task = {}
 }
 
 local task_mgr = {
-    trigger_event = function(player)
-        local taskids = mgrs.count_task(player, player.task, task_cfg)
+    trigger_event = function(player, pevent)
+        local taskids = mgrs.count_task(player, player.task, task_cfg, pevent)
         print("change taskids", dump(taskids))
     end
 }
@@ -146,4 +144,6 @@ mgrs.trigger_event(player, {enums.player_level, 10})
 mgrs.trigger_event(player, {enums.build_level, enums.build_main, 5})
 mgrs.trigger_event(player, {enums.build_level, enums.build_main, 6})
 mgrs.trigger_event(player, {enums.build_level, enums.build_room, 5})
+mgrs.trigger_event(player, {10, 3})
+mgrs.trigger_event(player, {5, 5, 5})
 print("after trigger", dump(player))

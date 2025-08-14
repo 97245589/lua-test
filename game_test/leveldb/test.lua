@@ -2,26 +2,33 @@ require "util"
 local format = string.format
 local leveldb = require("lleveldb")
 
-local db = leveldb.create_lleveldb("db")
+local test1 = function()
+    local db = leveldb.create_lleveldb("db", 1024 * 1024)
+    db:put("hello", "world")
+    print(db:get("hello"))
+    db:del("hello")
+    print(db:get("hello"))
 
-db:put("hello", "world")
-print(db:get("hello"))
-db:del("hello")
-print(db:get("hello"))
+    for i = 1, 10 do
+        db:put("hello" .. i, "world" .. i)
+    end
 
-for i = 1, 10 do
-    db:put("hello" .. i, "world" .. i)
+    local ret = db:iter("ha", "hz")
+    print_v(ret)
 end
 
-local ret = db:iter("ha", "hz")
-print_v(ret)
-
-local t = os.time()
-local n = 100000
-for i = 1, n do
-    db:put("hello" .. i, "world" .. i)
+local test2 = function()
+    local db = leveldb.create_lleveldb("db", 1024 * 1024)
+    local arr = {}
+    for i = 1, 5 do
+        table.insert(arr, "hello" .. i)
+        table.insert(arr, "world" .. i)
+        table.insert(arr, "world" .. i)
+        table.insert(arr, "hello" .. i)
+    end
+    print(#arr)
+    db:batch(arr)
+    print(dump(db:get_all()))
+    print(dump(db:pre_get("hello1")))
 end
-for i = 1, n do
-    db:get("hello" .. i)
-end
-print(format("%s put get times cost %s", n, os.time() - t))
+test2()
